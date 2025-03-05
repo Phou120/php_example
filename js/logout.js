@@ -1,11 +1,13 @@
 // logout.js
 
 // Check if username and email exist in localStorage
-const username = localStorage.getItem('username');
+const full_name = localStorage.getItem('full_name');
 const email = localStorage.getItem('email');
+const id = localStorage.getItem('id');
+console.log(full_name + ' ' + email + ' ' + id);
 
-// Redirect to signin.php if username or email is missing
-if (!username || !email) {
+// // Redirect to signin.php if username or email is missing
+if (!full_name || !email || !id) {
     window.location.href = 'signin.php';
 }
 
@@ -20,7 +22,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const confirmLogout = confirm('Are you sure you want to log out?');
             if (confirmLogout) {
                 // Clear username and email from localStorage
-                localStorage.removeItem('username');
+                localStorage.removeItem('id');
+                localStorage.removeItem('full_name');
                 localStorage.removeItem('email');
 
                 // Redirect to signin.php

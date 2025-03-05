@@ -10,18 +10,7 @@
 
 <body class="bg-gray-100 flex md:items-center md:justify-center h-dvh">
     <div class="md:bg-white p-6 rounded-lg md:shadow-md md:max-w-md w-full md:flex md:flex-col">
-        <!-- Back Arrow Icon -->
-        <div class="flex items-center mb-4">
-            <button class="text-gray-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-                </svg>
-            </button>
-        </div>
-        <!-- Welcome Back Text -->
-        <h1 class="text-2xl font-bold mb-2">Welcome Back <span class="wave">👋</span></h1>
-        <p class="text-gray-500 mb-6">Sign in to your account</p>
+        <p class="text-gray-500 mb-6">Login</p>
         <!-- Form -->
         <form method="POST" action="">
             <?php
@@ -34,7 +23,7 @@
                 $password = $_POST['password'];
 
                 // Query the database for the user
-                $sql = "SELECT id, username, email, password FROM users WHERE email='$email'";
+                $sql = "SELECT id, full_name, email, password FROM users WHERE email='$email'";
                 $result = $conn->query($sql);
 
                 if ($result->num_rows > 0) {
@@ -43,17 +32,18 @@
                         // Start a session and store user data
                         session_start();
                         $_SESSION['user_id'] = $user['id'];
-                        $_SESSION['username'] = $user['username'];
+                        $_SESSION['full_name'] = $user['full_name'];
                         $_SESSION['email'] = $user['email'];
 
                         // Log user data to a file
                         $ip = $_SERVER['REMOTE_ADDR']; // Get the user's IP address
-                        $logMessage = "User ID: {$user['id']}, Username: {$user['username']}, Email: {$user['email']}, IP: $ip, Login Time: " . date('Y-m-d H:i:s') . PHP_EOL;
+                        $logMessage = "User ID: {$user['id']}, full_name: {$user['full_name']}, Email: {$user['email']}, IP: $ip, Login Time: " . date('Y-m-d H:i:s') . PHP_EOL;
                         file_put_contents('logLogin.log', $logMessage, FILE_APPEND);
 
                        // Pass user data to JavaScript for localStorage
                         echo "<script>
-                        localStorage.setItem('username', '" . addslashes($user['username']) . "');
+                        localStorage.setItem('id', '" . addslashes($user['id']) . "');
+                        localStorage.setItem('full_name', '" . addslashes($user['full_name']) . "');
                         localStorage.setItem('email', '" . addslashes($user['email']) . "');
                         window.location.href = 'home.php';
                         </script>";
@@ -96,16 +86,12 @@
                     </button>
                 </div>
             </div>
-            <!-- Forgot Password Link -->
-            <div class="text-right mb-6">
-                <a href="forgot-password.html" class="text-sm text-green-600 font-semibold">Forgot Password?</a>
-            </div>
             <!-- Login Button -->
             <button type="submit"
-                class="w-full bg-green-600 text-white py-2 rounded-md mb-4 font-semibold">Login</button>
+                class="w-full bg-blue-600 text-white py-2 rounded-md mb-4 font-semibold">Login</button>
             <!-- Sign Up Option -->
             <p class="text-center text-gray-500 text-sm">Don't have an account? <a href="signup.php"
-                    class="text-green-600 font-semibold">Sign Up</a></p>
+                    class="text-green-600 font-semibold">Create Account</a></p>
         </form>
     </div>
 
