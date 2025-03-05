@@ -154,9 +154,12 @@ if ($stmt = $conn->prepare($userLikedQuery)) {
             </div>
 
             <div class="flex items-center space-x-3">
-                <button class="text-2xl cursor-pointer dark:text-white" onclick="logout()">
+                <button class="text-2xl cursor-pointer dark:text-white">
                     <i class="fas fa-user"></i>
                 </button>
+                <p><?php echo $name; ?></p>
+                <p>|</p>
+                <button style="color: red;" onclick="logout()">logout</button>
             </div>
         </header>
 
