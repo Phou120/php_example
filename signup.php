@@ -3,7 +3,7 @@
 require_once 'db.php';
 
 // Initialize error messages and success message
-$errors = ['full_name' => '', 'email' => '', 'password' => ''];
+$errors = ['full_name' => '', 'email' => '', 'password' => '', 'image' => ''];
 $success_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -11,6 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['full_name'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
+    $image = $_FILES['image'] ?? null;
 
     // Validate full name
     if (empty($name)) {
@@ -43,19 +44,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors['password'] = 'Password must be at least 6 characters long.';
     }
 
+    // Validate image
+    if ($image && $image['error'] == 0) {
+        $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!in_array($image['type'], $allowed_types)) {
+            $errors['image'] = 'Only JPG, PNG, and GIF images are allowed.';
+        } else {
+            $image_name = uniqid() . '_' . basename($image['name']);
+            $upload_dir = 'uploads/';
+
+            // Check if the directory exists, if not, create it
+            if (!file_exists($upload_dir)) {
+                mkdir($upload_dir, 0777, true);  // Create directory with full permissions
+            }
+
+            $upload_file = $upload_dir . $image_name;
+
+            // Move the uploaded file to the desired directory
+            if (!move_uploaded_file($image['tmp_name'], $upload_file)) {
+                $errors['image'] = 'There was an error uploading the image.';
+            }
+        }
+    } else {
+        $errors['image'] = 'Please upload a profile image.';
+    }
+
     // If no errors, proceed with registration
     if (!array_filter($errors)) {
+        // Insert into users table
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-        $sql = "INSERT INTO users (full_name, email, password) VALUES (?, ?, ?)";
+
+        // Handle image file (if uploaded)
+        $image = $image ? $upload_file : null;
+
+        $sql = "INSERT INTO users (full_name, email, password, profile_picture) VALUES (?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sss", $name, $email, $hashed_password);
+
+        // Bind parameters: "ssss" for 4 string values (full_name, email, password, profile_picture)
+        $stmt->bind_param("ssss", $name, $email, $hashed_password, $image);
 
         if ($stmt->execute()) {
-            $success_message = "<p class='text-green-600 text-sm mb-4'>User registered successfully!</p>";
+            // Get the inserted user's ID
+            $user_id = $stmt->insert_id;
+            $stmt->close();
+            $success_message = "User registered successfully!";
         } else {
-            echo "<p class='text-red-600 text-sm mb-4'>Error: " . $conn->error . "</p>";
+            echo "<p class='text-red-600 text-sm mb-4'>Error registering user: " . $conn->error . "</p>";
         }
-        $stmt->close();
     }
 
     // Close the connection
@@ -70,6 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Account</title>
+    <link rel="icon" href="img/letter-h-logo-gold-free-png.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
@@ -80,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <!-- Display success message -->
         <?= $success_message ?>
 
-        <form method="POST" action="">
+        <form method="POST" enctype="multipart/form-data">
             <!-- Full Name Input -->
             <div class="mb-4">
                 <label for="full_name" class="block text-left text-sm font-medium text-gray-700">Full Name</label>
@@ -103,6 +139,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <input type="password" id="password" name="password"
                     class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
                 <p class="text-red-500 text-sm"><?= $errors['password'] ?></p>
+            </div>
+
+            <!-- Profile Image Upload -->
+            <div class="mb-4">
+                <label for="image" class="block text-left text-sm font-medium text-gray-700">Profile Image</label>
+                <input type="file" id="image" name="image"
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
+                <p class="text-red-500 text-sm"><?= $errors['image'] ?></p>
             </div>
 
             <!-- Register Button -->
